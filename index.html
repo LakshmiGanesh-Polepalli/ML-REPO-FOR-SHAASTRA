@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Shaastra 2025 — Campus Assistant</title>
+<style>
+  :root {
+    --bg:       #0a0e1a;
+    --surface:  #111827;
+    --card:     #1a2235;
+    --border:   #1e3a5f;
+    --accent1:  #00d4ff;
+    --accent2:  #7c3aed;
+    --accent3:  #f59e0b;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --green:    #22c55e;
+    --red:      #ef4444;
+    --node-col: #00d4ff;
+    --path-col: #f59e0b;
+    --edge-col: #1e3a5f;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ──────────────────────────────────────────────────── */
+  header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .logo-mark {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 18px; color: #fff; flex-shrink: 0;
+  }
+  .header-title h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent1); }
+  .header-title p  { font-size: 0.78rem; color: var(--muted); }
+  .geo-badge {
+    margin-left: auto;
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .geo-badge.active { border-color: var(--green); color: var(--green); }
+  .geo-badge:hover  { background: var(--card); }
+
+  /* ── MAIN LAYOUT ─────────────────────────────────────────────── */
+  .layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 0;
+    max-height: calc(100vh - 73px);
+    overflow: hidden;
+  }
+
+  /* ── LEFT: CHAT ──────────────────────────────────────────────── */
+  .chat-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .quick-chips {
+    padding: 12px 16px 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 0.73rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .18s;
+    white-space: nowrap;
+  }
+  .chip:hover { border-color: var(--accent1); color: var(--accent1); background: rgba(0,212,255,.06); }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* message bubbles */
+  .msg { display: flex; gap: 10px; }
+  .msg.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .avatar.bot { background: linear-gradient(135deg, var(--accent1), var(--accent2)); }
+  .avatar.user{ background: var(--accent3); color: #000; font-weight: 700; }
+
+  .bubble {
+    max-width: 82%;
+    padding: 11px 14px;
+    border-radius: 14px;
+    font-size: 0.86rem;
+    line-height: 1.55;
+  }
+  .msg.bot .bubble {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, var(--accent2), #4f46e5);
+    border-top-right-radius: 4px;
+    color: #fff;
+  }
+
+  .bubble strong { color: var(--accent1); }
+  .bubble .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .tag.routing  { background: rgba(0,212,255,.12); color: var(--accent1); }
+  .tag.schedule { background: rgba(245,158,11,.12); color: var(--accent3); }
+  .tag.fallback { background: rgba(124,58,237,.12); color: #a78bfa; }
+
+  /* directions list */
+  .directions { margin-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .dir-step {
+    display: flex; gap: 8px; align-items: flex-start;
+    font-size: 0.83rem; padding: 5px 8px;
+    border-radius: 8px; background: rgba(255,255,255,.03);
+  }
+
+  /* event cards */
+  .time-slot { margin-top: 10px; }
+  .time-label {
+    font-size: 0.72rem; font-weight: 700;
+    color: var(--accent3); letter-spacing: .06em;
+    text-transform: uppercase; margin-bottom: 5px;
+  }
+  .event-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+  }
+  .event-card .ev-name   { font-weight: 600; color: var(--text); }
+  .event-card .ev-meta   { color: var(--muted); font-size: 0.76rem; margin-top: 2px; }
+  .event-card .ev-cat    {
+    display: inline-block;
+    font-size: 0.65rem; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px;
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-right: 5px;
+  }
+  .cat-workshop  { background: rgba(34,197,94,.15);  color: #4ade80; }
+  .cat-coding    { background: rgba(0,212,255,.15);  color: var(--accent1); }
+  .cat-cultural  { background: rgba(245,158,11,.15); color: var(--accent3); }
+  .cat-lecture   { background: rgba(124,58,237,.15); color: #c4b5fd; }
+  .cat-gaming    { background: rgba(239,68,68,.15);  color: #f87171; }
+
+  .ev-reg { margin-top: 5px; }
+  .ev-reg a {
+    font-size: 0.72rem; color: var(--accent1);
+    text-decoration: none; border-bottom: 1px dashed var(--accent1);
+  }
+
+  /* input bar */
+  .input-bar {
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .input-bar textarea {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 0.88rem;
+    padding: 10px 13px;
+    resize: none;
+    min-height: 42px;
+    max-height: 130px;
+    outline: none;
+    font-family: inherit;
+    line-height: 1.4;
+    transition: border-color .2s;
+  }
+  .input-bar textarea:focus { border-color: var(--accent1); }
+  .input-bar textarea::placeholder { color: var(--muted); }
+
+  .send-btn {
+    width: 42px; height: 42px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    color: #fff;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: opacity .2s, transform .1s;
+  }
+  .send-btn:hover   { opacity: .85; }
+  .send-btn:active  { transform: scale(.95); }
+  .send-btn svg     { width: 18px; height: 18px; }
+  .send-btn:disabled { opacity: .4; cursor: default; }
+
+  /* typing indicator */
+  .typing { display: flex; gap: 5px; align-items: center; padding: 4px 0; }
+  .typing span {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent1);
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: .2s; }
+  .typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes bounce {
+    0%,80%,100% { transform: translateY(0); opacity: .4; }
+    40%          { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* ── RIGHT: MAP ──────────────────────────────────────────────── */
+  .map-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .map-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .map-header span { color: var(--accent1); font-size: 0.95rem; }
+
+  .map-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    overflow: hidden;
+  }
+
+  #campus-map {
+    width: 100%;
+    height: 100%;
+    max-height: 500px;
+  }
+
+  /* SVG styling */
+  .edge-line   { stroke: var(--edge-col); stroke-width: 2; }
+  .path-line   { stroke: var(--path-col); stroke-width: 3.5; stroke-dasharray: 6,3; stroke-linecap: round; }
+  .node-circle { fill: var(--card); stroke: var(--node-col); stroke-width: 2; cursor: pointer; transition: r .2s; }
+  .node-circle:hover { r: 9; }
+  .node-on-path { fill: rgba(245,158,11,.25); stroke: var(--path-col); stroke-width: 2.5; }
+  .node-label  { fill: var(--text); font-size: 9px; font-family: 'Segoe UI', sans-serif; pointer-events: none; }
+  .node-origin { fill: rgba(34,197,94,.3); stroke: var(--green); stroke-width: 2.5; }
+  .node-dest   { fill: rgba(239,68,68,.3); stroke: var(--red); stroke-width: 2.5; }
+
+  /* map legend */
+  .map-legend {
+    padding: 8px 14px 10px;
+    display: flex;
+    gap: 14px;
+    font-size: 0.71rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* dist badge on map */
+  .dist-badge {
+    padding: 5px 12px 6px;
+    background: rgba(245,158,11,.12);
+    border-top: 1px solid rgba(245,158,11,.3);
+    font-size: 0.8rem;
+    color: var(--accent3);
+    text-align: center;
+    font-weight: 600;
+  }
+
+  /* Responsive */
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+    .map-panel { max-height: 300px; border-right: none; border-top: 1px solid var(--border); }
+    .chat-panel { overflow: hidden; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-mark">S</div>
+  <div class="header-title">
+    <h1>Shaastra 2025 Assistant</h1>
+    <p>IIT Madras Technical Festival · Jan 16–19</p>
+  </div>
+  <button class="geo-badge" id="geo-btn" onclick="requestGeo()">
+    📍 Enable Location
+  </button>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- CHAT -->
+  <div class="chat-panel">
+    <div class="quick-chips">
+      <div class="chip" onclick="sendQuick('Where is OAT?')">📍 Where is OAT?</div>
+      <div class="chip" onclick="sendQuick('How do I get to CLT?')">🗺️ Get to CLT</div>
+      <div class="chip" onclick="sendQuick('What events are on Day 2?')">📅 Day 2 events</div>
+      <div class="chip" onclick="sendQuick('Show me workshops on January 17')">🔧 Workshops</div>
+      <div class="chip" onclick="sendQuick('What coding events are there?')">💻 Coding</div>
+      <div class="chip" onclick="sendQuick('Where is Taramani Gate?')">🚪 Taramani Gate</div>
+      <div class="chip" onclick="sendQuick('Events on Day 4')">🏆 Day 4</div>
+    </div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="input-bar">
+      <textarea
+        id="input"
+        placeholder="Ask about locations or schedule… e.g. 'Where is SAC?' or 'Day 3 events'"
+        rows="1"
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="send-btn" id="send-btn" onclick="sendQuery()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div class="map-panel">
+    <div class="map-header">
+      <span>🗺️</span> IITM Campus Map
+    </div>
+    <div class="map-wrap">
+      <svg id="campus-map" viewBox="0 0 700 460" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background grid -->
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#111f33" stroke-width="0.5"/>
+          </pattern>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+          </marker>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <rect width="700" height="460" fill="url(#grid)"/>
+        <!-- Campus outline -->
+        <rect x="60" y="30" width="590" height="420" rx="20"
+              fill="none" stroke="#1a3a5c" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <!-- Green zones (decorative) -->
+        <ellipse cx="340" cy="250" rx="110" ry="80"
+                 fill="rgba(34,197,94,0.04)" stroke="rgba(34,197,94,0.1)" stroke-width="1"/>
+        <!-- Edges group -->
+        <g id="edges-group"></g>
+        <!-- Path highlight group -->
+        <g id="path-group"></g>
+        <!-- Nodes group -->
+        <g id="nodes-group"></g>
+      </svg>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--node-col);"></div> Location
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--green);"></div> Start
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--red);"></div> Destination
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:var(--path-col); border-radius:2px; width:16px; height:4px;"></div> Route
+      </div>
+    </div>
+    <div class="dist-badge" id="dist-badge" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ─────────────────────────────────────────────────────────────────
+const API = 'http://localhost:8000';
+let userLat = null, userLng = null;
+let mapNodes = [], mapEdges = [];
+let currentPath = [];
+
+// ─── GEO ───────────────────────────────────────────────────────────────────
+function requestGeo() {
+  if (!navigator.geolocation) {
+    alert('Geolocation not supported by your browser.');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      const btn = document.getElementById('geo-btn');
+      btn.textContent = '✅ Location Active';
+      btn.classList.add('active');
+    },
+    err => {
+      const btn = document.getElementById('geo-btn');
+      btn.textContent = '❌ Location Denied';
+    }
+  );
+}
+
+// ─── MAP RENDER ─────────────────────────────────────────────────────────────
+function renderBaseMap(nodes, edges) {
+  mapNodes = nodes;
+  mapEdges = edges;
+
+  const edgesG = document.getElementById('edges-group');
+  edgesG.innerHTML = '';
+  edges.forEach(e => {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', e.x1); line.setAttribute('y1', e.y1);
+    line.setAttribute('x2', e.x2); line.setAttribute('y2', e.y2);
+    line.setAttribute('class', 'edge-line');
+    edgesG.appendChild(line);
+  });
+
+  const nodesG = document.getElementById('nodes-group');
+  nodesG.innerHTML = '';
+  nodes.forEach(n => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.id = 'node-' + n.name.replace(/\s+/g, '_');
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y);
+    circle.setAttribute('r', 7);
+    circle.setAttribute('class', 'node-circle');
+    circle.addEventListener('click', () => sendQuick(`Where is ${n.name}?`));
+
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    // Offset label to avoid overlap
+    const offsets = labelOffset(n.name);
+    label.setAttribute('x', n.x + offsets.dx);
+    label.setAttribute('y', n.y + offsets.dy);
+    label.setAttribute('class', 'node-label');
+    label.setAttribute('text-anchor', offsets.anchor);
+    label.textContent = n.name;
+
+    g.appendChild(circle); g.appendChild(label);
+    nodesG.appendChild(g);
+  });
+}
+
+function labelOffset(name) {
+  const map = {
+    'Main Gate':     { dx: 0,   dy: -12,  anchor: 'middle' },
+    'CLT':           { dx: 12,  dy: -10,  anchor: 'start'  },
+    'OAT':           { dx: -12, dy: -10,  anchor: 'end'    },
+    'SAC':           { dx: 12,  dy: -10,  anchor: 'start'  },
+    'Himalaya':      { dx: -12, dy: 5,    anchor: 'end'    },
+    'Godavari':      { dx: 12,  dy: 5,    anchor: 'start'  },
+    'Jamuna':        { dx: 12,  dy: -10,  anchor: 'start'  },
+    'Sharavati':     { dx: -12, dy: 5,    anchor: 'end'    },
+    'Taramani Gate': { dx: 0,   dy: 16,   anchor: 'middle' },
+  };
+  return map[name] || { dx: 12, dy: -10, anchor: 'start' };
+}
+
+function highlightPath(svgCoords, originName, destName) {
+  // Clear old path
+  document.getElementById('path-group').innerHTML = '';
+
+  // Reset all node circles to default
+  mapNodes.forEach(n => {
+    const circle = document.querySelector('#node-' + n.name.replace(/\s+/g,'_') + ' circle');
+    if (circle) circle.setAttribute('class', 'node-circle');
+  });
+
+  if (!svgCoords || svgCoords.length === 0) return;
+
+  const pathG = document.getElementById('path-group');
+
+  // Draw path lines with animation
+  for (let i = 0; i < svgCoords.length - 1; i++) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', svgCoords[i].x);   line.setAttribute('y1', svgCoords[i].y);
+    line.setAttribute('x2', svgCoords[i+1].x); line.setAttribute('y2', svgCoords[i+1].y);
+    line.setAttribute('class', 'path-line');
+    if (i === svgCoords.length - 2) {
+      line.setAttribute('marker-end', 'url(#arrow)');
+    }
+    pathG.appendChild(line);
+  }
+
+  // Highlight path nodes
+  currentPath.forEach((name, idx) => {
+    const circle = document.querySelector('#node-' + name.replace(/\s+/g,'_') + ' circle');
+    if (!circle) return;
+    if (name === originName)  { circle.setAttribute('class', 'node-circle node-origin'); circle.setAttribute('r','9'); }
+    else if (name === destName) { circle.setAttribute('class', 'node-circle node-dest'); circle.setAttribute('r','9'); }
+    else { circle.setAttribute('class', 'node-circle node-on-path'); }
+  });
+}
+
+function clearPath() {
+  document.getElementById('path-group').innerHTML = '';
+  document.getElementById('dist-badge').style.display = 'none';
+  mapNodes.forEach(n => {
+    const circle = document.querySelector('#node-' + n.name.replace(/\s+/g,'_') + ' circle');
+    if (circle) { circle.setAttribute('class', 'node-circle'); circle.setAttribute('r','7'); }
+  });
+}
+
+// ─── MESSAGES ───────────────────────────────────────────────────────────────
+function addMessage(role, content) {
+  const messages = document.getElementById('messages');
+
+  if (role === 'typing') {
+    const div = document.createElement('div');
+    div.className = 'msg bot'; div.id = 'typing-indicator';
+    div.innerHTML = `
+      <div class="avatar bot">S</div>
+      <div class="bubble">
+        <div class="typing"><span></span><span></span><span></span></div>
+      </div>`;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return;
+  }
+
+  // Remove typing indicator
+  const typing = document.getElementById('typing-indicator');
+  if (typing) typing.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  if (role === 'user') {
+    div.innerHTML = `
+      <div class="avatar user">U</div>
+      <div class="bubble">${escHtml(content)}</div>`;
+  } else {
+    div.innerHTML = `
+      <div class="avatar bot">S</div>
+      <div class="bubble">${content}</div>`;
+  }
+
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── RESPONSE RENDERING ─────────────────────────────────────────────────────
+function renderResponse(data) {
+  const tag = `<span class="tag ${data.intent}">${data.intent.toUpperCase()}</span>`;
+
+  if (data.intent === 'routing') {
+    let html = tag;
+    html += `<div>${mdBold(data.message)}</div>`;
+
+    if (data.directions && data.directions.length > 0) {
+      html += `<div class="directions">`;
+      data.directions.forEach(step => {
+        html += `<div class="dir-step">${mdBold(escHtml(step))}</div>`;
+      });
+      html += `</div>`;
+    }
+
+    addMessage('bot', html);
+
+    // Update map
+    if (data.svg_path && data.map_nodes) {
+      renderBaseMap(data.map_nodes, data.map_edges);
+      currentPath = data.path || [];
+      highlightPath(data.svg_path, data.origin_node, data.dest_node);
+
+      const badge = document.getElementById('dist-badge');
+      if (data.total_dist > 0) {
+        badge.textContent = `🚶 Walking distance: ~${data.total_dist}m`;
+        badge.style.display = 'block';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+  } else if (data.intent === 'schedule') {
+    let html = tag;
+    html += `<div>${escHtml(data.message)}</div>`;
+
+    if (data.grouped && Object.keys(data.grouped).length > 0) {
+      Object.entries(data.grouped).forEach(([time, events]) => {
+        html += `<div class="time-slot">`;
+        html += `<div class="time-label">⏰ ${time}</div>`;
+        events.forEach(ev => {
+          const catClass = 'cat-' + ev.category;
+          html += `
+            <div class="event-card">
+              <div><span class="ev-cat ${catClass}">${ev.category}</span>
+                   <span class="ev-name">${escHtml(ev.event_name)}</span></div>
+              <div class="ev-meta">📍 ${escHtml(ev.venue)} &nbsp;|&nbsp; Day ${ev.day_number} &nbsp;|&nbsp; ${ev.start_time}–${ev.end_time}</div>
+              ${ev.registration_link
+                ? `<div class="ev-reg"><a href="${escHtml(ev.registration_link)}" target="_blank">🔗 Register →</a></div>`
+                : ''}
+            </div>`;
+        });
+        html += `</div>`;
+      });
+    }
+
+    addMessage('bot', html);
+    // Clear routing highlights for schedule responses
+    clearPath();
+
+  } else {
+    // fallback
+    const html = `<span class="tag fallback">HELP</span><div>${mdBold(escHtml(data.message))}</div>`;
+    addMessage('bot', html);
+    clearPath();
+  }
+
+  // Always update base map if provided
+  if (data.map_nodes && data.intent !== 'routing') {
+    renderBaseMap(data.map_nodes, data.map_edges);
+  }
+}
+
+// Very simple markdown bold: **text** → <strong>text</strong>
+function mdBold(str) {
+  return str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
+// ─── SEND ────────────────────────────────────────────────────────────────────
+async function sendQuery() {
+  const input = document.getElementById('input');
+  const query = input.value.trim();
+  if (!query) return;
+
+  input.value = '';
+  autoResize(input);
+
+  addMessage('user', query);
+  addMessage('typing');
+
+  document.getElementById('send-btn').disabled = true;
+
+  try {
+    const body = { query };
+    if (userLat !== null) { body.lat = userLat; body.lng = userLng; }
+
+    const res  = await fetch(`${API}/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    const data = await res.json();
+    renderResponse(data);
+
+  } catch (err) {
+    const typing = document.getElementById('typing-indicator');
+    if (typing) typing.remove();
+    addMessage('bot',
+      `<span class="tag fallback">ERROR</span><div>⚠️ Could not reach the server. Make sure the backend is running on <strong>localhost:8000</strong>.</div>`
+    );
+    console.error(err);
+  } finally {
+    document.getElementById('send-btn').disabled = false;
+  }
+}
+
+function sendQuick(text) {
+  document.getElementById('input').value = text;
+  sendQuery();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuery(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 130) + 'px';
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+async function init() {
+  // Load base map
+  try {
+    const res  = await fetch(`${API}/map`);
+    const data = await res.json();
+    renderBaseMap(data.nodes, data.edges);
+  } catch {
+    // Server may not be up yet — show static placeholder
+    console.warn('Could not load map data from server.');
+  }
+
+  // Welcome message
+  addMessage('bot', `
+    <span class="tag fallback">WELCOME</span>
+    <div>
+      👋 Welcome to <strong>Shaastra 2025</strong>!<br><br>
+      I can help you with:<br>
+      🗺️ <strong>Navigation</strong> — "Where is OAT?", "How do I get to SAC?"<br>
+      📅 <strong>Schedule</strong> — "Events on Day 2", "Show me workshops"<br><br>
+      Use the quick chips above or type your question below!
+    </div>
+  `);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+
+<style>
+  h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .arch-wrap{padding:1rem 0;font-family:var(--font-sans)}
+  .layer-label{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;padding-left:2px}
+  .layer{margin-bottom:10px}
+  .row{display:flex;gap:8px;flex-wrap:nowrap}
+  .node{flex:1;min-width:0;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;cursor:pointer;transition:background .15s,border-color .15s;position:relative}
+  .node:hover{background:var(--color-background-secondary);border-color:var(--color-border-secondary)}
+  .node-title{font-size:12px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .node-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badge{display:inline-block;font-size:10px;font-weight:500;padding:1px 6px;border-radius:4px;margin-top:4px}
+  .b-purple{background:var(--color-background-secondary);color:var(--color-text-primary);border:0.5px solid #AFA9EC}
+  .b-teal{background:var(--color-background-secondary);color:#0F6E56;border:0.5px solid #5DCAA5}
+  .b-amber{background:var(--color-background-secondary);color:#854F0B;border:0.5px solid #EF9F27}
+  .b-blue{background:var(--color-background-secondary);color:#185FA5;border:0.5px solid #85B7EB}
+  .b-coral{background:var(--color-background-secondary);color:#993C1D;border:0.5px solid #F0997B}
+  .b-gray{background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-secondary)}
+  .n-purple{border-color:#AFA9EC}
+  .n-teal{border-color:#5DCAA5}
+  .n-amber{border-color:#EF9F27}
+  .n-blue{border-color:#85B7EB}
+  .n-coral{border-color:#F0997B}
+  .n-green{border-color:#97C459}
+  .connector{display:flex;justify-content:center;gap:8px;margin:0;height:14px;position:relative}
+  .connector::before{content:'';position:absolute;top:50%;left:10%;right:10%;height:0.5px;background:var(--color-border-tertiary)}
+  .arr-down{font-size:12px;color:var(--color-text-tertiary);line-height:14px;z-index:1;background:var(--color-background-primary);padding:0 4px}
+  .gateway{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+  .gw-title{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+  .gw-pills{display:flex;gap:6px}
+  .pill{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
+  .infra-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .infra-node{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 12px;display:flex;align-items:center;gap:8px}
+  .infra-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+  .traffic-bar{height:3px;border-radius:2px;margin-top:6px;background:linear-gradient(to right,#5DCAA5,#EF9F27,#E24B4A);opacity:.7}
+  .section-divider{display:flex;align-items:center;gap:8px;margin:8px 0 6px}
+  .div-line{flex:1;height:0.5px;background:var(--color-border-tertiary)}
+  .div-text{font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+</style>
+<div class="arch-wrap">
+  <h2 class="sr-only">Shaastra 2026 ML vertical system architecture diagram showing API gateway, five core services, data stores, and infrastructure tiers</h2>
+
+  <div class="section-divider"><div class="div-line"></div><div class="div-text">Ingress</div><div class="div-line"></div></div>
+  <div class="layer">
+    <div class="gateway" onclick="sendPrompt('Go deeper on the API gateway design — rate limiting, auth middleware, and TypeGraphQL schema design for this architecture')">
+      <div>
+        <div class="gw-title">API Gateway + TypeGraphQL</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">JWT auth · rate limiting · schema-first typing · CORS</div>
+      </div>
+      <div class="gw-pills">
+        <span class="pill" style="background:#E1F5EE;color:#0F6E56">REST</span>
+        <span class="pill" style="background:#E6F1FB;color:#185FA5">GraphQL</span>
+        <span class="pill" style="background:#EEEDFE;color:#534AB7">WebSocket</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><span class="arr-down">↓ routes by service</span></div>
+
+  <div class="section-divider"><div class="div-line"></div><div class="div-text">Core services</div><div class="div-line"></div></div>
+  <div class="layer">
+    <div class="row">
+      <div class="node n-purple" onclick="sendPrompt('Design the USI (Unified Shaastra Identity) service in detail — UUID generation strategy, cross-vertical event tracking schema, and how it anchors the other four services')">
+        <div class="node-title">USI Service</div>
+        <div class="node-sub">Shaastra Aadhar UUID</div>
+        <span class="badge b-purple">immutable ID</span>
+      </div>
+      <div class="node n-coral" onclick="sendPrompt('Deep dive the Aadhar pipeline — CNN image rectification, OCR stage, XLNet semantic verification, and the confidence threshold logic for routing to manual review')">
+        <div class="node-title">Aadhar Pipeline</div>
+        <div class="node-sub">ID verification CV</div>
+        <span class="badge b-coral">28k+ IDs</span>
+      </div>
+      <div class="node n-teal" onclick="sendPrompt('Deep dive the Agentic RAG chatbot — tool-calling architecture, campus spatial graph integration, retrieval chain design, and how to handle hallucination in high-stakes scheduling queries')">
+        <div class="node-title">Agentic RAG</div>
+        <div class="node-sub">LLM + vector + graph</div>
+        <span class="badge b-teal">real-time routing</span>
+      </div>
+      <div class="node n-amber" onclick="sendPrompt('Design the predictive analytics pipeline — feature engineering from registration data, XGBoost footfall model, churn analysis, and how to serve insights as a dashboard to Events and Finance verticals')">
+        <div class="node-title">Analytics Engine</div>
+        <div class="node-sub">XGBoost / LightGBM</div>
+        <span class="badge b-amber">footfall + churn</span>
+      </div>
+      <div class="node n-blue" onclick="sendPrompt('Design the hybrid recommendation engine — collaborative vs content-based weighting, cold-start for new participants, the GraphQL API contract, and A/B testing strategy')">
+        <div class="node-title">Rec Engine</div>
+        <div class="node-sub">Hybrid filtering</div>
+        <span class="badge b-blue">GraphQL API</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="arr-down">↓ reads / writes</div></div>
+
+  <div class="section-divider"><div class="div-line"></div><div class="div-text">Data tier</div><div class="div-line"></div></div>
+  <div class="layer">
+    <div class="row">
+      <div class="node n-green" onclick="sendPrompt('Design the PostgreSQL schema for Shaastra — USI anchor table, registration data model, event participation tables, TypeORM entity design, and migration strategy')">
+        <div class="node-title">PostgreSQL</div>
+        <div class="node-sub">TypeORM · pgvector</div>
+        <div class="traffic-bar"></div>
+      </div>
+      <div class="node n-blue" onclick="sendPrompt('Compare Qdrant vs Pinecone vs Weaviate for this use case — budget, self-hosting on DigitalOcean, and optimal chunking strategy for event rulebooks')">
+        <div class="node-title">Vector DB</div>
+        <div class="node-sub">Qdrant / Pinecone</div>
+        <div class="traffic-bar" style="opacity:.4"></div>
+      </div>
+      <div class="node n-teal" onclick="sendPrompt('Design the Neo4j spatial graph for the IITM campus — node types, relationship schema, Cypher queries for routing, and how the RAG agent calls it as a tool')">
+        <div class="node-title">Graph DB</div>
+        <div class="node-sub">Neo4j · campus graph</div>
+        <div class="traffic-bar" style="opacity:.3"></div>
+      </div>
+      <div class="node n-amber" onclick="sendPrompt('Design the Redis caching strategy — what gets cached, TTL policy for event schedule data, session management, and queue design for async CV pipeline jobs')">
+        <div class="node-title">Redis</div>
+        <div class="node-sub">cache · queues · sessions</div>
+        <div class="traffic-bar" style="opacity:.5"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="arr-down">↓ containerised on</div></div>
+
+  <div class="section-divider"><div class="div-line"></div><div class="div-text">MLOps + infrastructure</div><div class="div-line"></div></div>
+  <div class="layer">
+    <div class="infra-row">
+      <div class="infra-node" onclick="sendPrompt('Design the Kubernetes manifests for this stack — Deployment, HPA config, resource requests/limits, and namespace strategy for ML vs web services on DigitalOcean DOKS')">
+        <div class="infra-icon" style="background:#E1F5EE">⎈</div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">Kubernetes (DOKS)</div>
+          <div style="font-size:11px;color:var(--color-text-secondary)">HPA · namespaces · RBAC</div>
+        </div>
+      </div>
+      <div class="infra-node" onclick="sendPrompt('Design the Docker image strategy — multi-stage builds for ML models, layer caching to reduce image size, and a lightweight base image approach for budget DO droplets')">
+        <div class="infra-icon" style="background:#E6F1FB">▣</div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">Docker</div>
+          <div style="font-size:11px;color:var(--color-text-secondary)">multi-stage · ONNX export</div>
+        </div>
+      </div>
+      <div class="infra-node" onclick="sendPrompt('Design the MLOps pipeline for model lifecycle management — experiment tracking with MLflow, model registry, canary deployments, and monitoring on a tight student budget')">
+        <div class="infra-icon" style="background:#FAEEDA">◈</div>
+        <div>
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-primary)">MLOps pipeline</div>
+          <div style="font-size:11px;color:var(--color-text-secondary)">MLflow · model registry</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;padding:8px 12px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="sendPrompt('How do I handle traffic spikes of 100+ req/sec during peak registration on DigitalOcean — HPA trigger tuning, pre-warming strategies, and database connection pooling')">
+    <span style="font-size:11px;color:var(--color-text-secondary)">Peak load target: <strong style="color:var(--color-text-primary)">100+ req/sec</strong> · HPA on CPU + custom Prometheus metrics · PgBouncer connection pooling</span>
+    <span style="font-size:11px;color:var(--color-text-tertiary)">click to explore ↗</span>
+  </div>
+</div>
